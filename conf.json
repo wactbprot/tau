@@ -1,0 +1,10 @@
+{
+  "db": {
+    "url": "http://localhost:5984",
+    "name": "tau",
+    "last_seq": 2
+  },
+  "repo": {
+    "folder": "/home/wact/tau_repo"
+  }
+}

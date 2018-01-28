@@ -62,6 +62,43 @@ class Tau(object):
 
             self.log.info("""document {} stored""".format( fn ))
 
+    def gen_folder(self):
+        if not os.path.exists(self.base_folder):
+            os.makedirs(self.base_folder)
+            self.log.debug("""generated foler {}""".format(self.base_folder))
+
+        if not os.path.exists(self.db_folder):
+            os.makedirs(self.db_folder)
+            self.log.debug("""generated foler {}""".format(self.db_folder))
+
+        if not os.path.exists(self.doc_folder):
+            os.makedirs(self.doc_folder)
+            self.log.debug("""generated foler {}""".format(self.doc_folder))
+
+    def ini(self):
+        self.gen_folder()
+        for id in self.db:
+            self.store_doc( id )
+
+        self.store_changes()
+
+
+    def update(self):
+        with open(self.changes_file) as ch:
+            changes = json.load(ch)
+
+        change_set_old  = changes["results"]
+        change_set_new  = self.db["_changes"]["results"]
+
+        for i, change in enumerate(change_set_new):
+            if i in change_set_old:
+                if change["seq"] != change_set_old[i]["seq"]:
+                    self.store_doc( change["id"])
+            else:
+                self.store_doc( change["id"])
+
+        self.store_changes()
+
 def main():
     """ Parses the command line options and calls the methods.
     """
@@ -69,40 +106,10 @@ def main():
     tau = Tau()
 
     if tau.args.i:
-
-        if not os.path.exists(tau.base_folder):
-            os.makedirs(tau.base_folder)
-            tau.log.debug("""generated foler {}""".format(tau.base_folder))
-
-        if not os.path.exists(tau.db_folder):
-            os.makedirs(tau.db_folder)
-            tau.log.debug("""generated foler {}""".format(tau.db_folder))
-
-        if not os.path.exists(tau.doc_folder):
-            os.makedirs(tau.doc_folder)
-            tau.log.debug("""generated foler {}""".format(tau.doc_folder))
-
-        for id in tau.db:
-            tau.store_doc( id )
-
-        tau.store_changes()
+        tau.ini()
 
     if tau.args.u:
-
-        with open(tau.changes_file) as ch:
-            changes = json.load(ch)
-
-        change_set_old  = changes["results"]
-        change_set_new  = tau.db["_changes"]["results"]
-
-        for i, change in enumerate(change_set_new):
-            if change_set_old[i]:
-                if change["seq"] != change_set_old[i]["seq"]:
-                    tau.store_doc( change["id"])
-            else:
-                tau.store_doc( change["id"])
-
-        tau.store_changes()
+        tau.update()
 
 if __name__ == "__main__":
     main()
